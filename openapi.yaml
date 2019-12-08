@@ -1,0 +1,355 @@
+openapi: 3.0.0
+
+info:
+  # You application title. Required.
+  title: Carggo Connect service
+
+  # API version. You can use semantic versioning like 1.0.0,
+  # or an arbitrary string like 0.99-beta. Required.
+  # мажорная версия отсюда мапится в урл
+  version: 1.0.1
+
+  # API description. Arbitrary text in CommonMark or HTML.
+  description: External Carggo APIs
+
+  # Link to the page that describes the terms of service.
+  # Must be in the URL format.
+  termsOfService: https://connect.carggo.com/api/terms/
+
+  # Contact information: name, email, URL.
+  contact:
+    name: API Support
+    email: api-support@carggo.com.com
+    url: https://connect.carggo.com/api/support
+
+    # Name of the license and a URL to the license description.
+  license:
+    name: Apache 2.0 # а какая у нас должна быть лицензия???
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+# Link to the external documentation (if any).
+# Code or documentation generation tools can use description as the text of the link.
+externalDocs:
+    description: Find out more
+    url: https://connect.carggo.com
+
+servers:
+  - url: https://api.carggo.com/v1
+    description: Production server (uses live data)
+  - url: https://api.sandbox.carggo.com/v1
+    description: Sandbox server (testing environment server for external users, part of Api As Product)
+  - url: https://api.testing.carggo.com/v1
+    description: Testing server (testing environment server where we test our services like in production before deploy in production)
+    variables:
+      serverEnvironment:
+        default: api    # Production server
+        enum:
+          - api         # Production server
+          - api.sandbox # Sandbox environment server for external users, part of Api As Product
+          - api.testing # Testing environment server where we test our services like in production before deploy in production
+        description: Name of server environment
+
+security:
+  - BasicAuth: []
+
+paths:
+  /auth/token:
+    post:
+      tags:
+        - auth
+      summary: Auth token to get access for other apis
+      description: >
+        Some description
+      operationId: authToken
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:
+                  type: string
+                  enum:
+                    - client_credentials
+                client_id:
+                  type: string
+                client_secret:
+                  type: string
+              required:
+                - grant_type
+                - client_id
+                - client_secret
+            example:
+              grant_type: client_credentials
+              client_id: carggo-mdm-app # надо наконец нормальный client_id завести в кейклоаке
+              client_secret: 78aaff56-7b86-4c92-9a1d-355f167c0619
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: access token
+                  expires_in:
+                    type: integer
+                    description: expiration of access token
+                  refresh_expires_in:
+                    type: integer
+                    description: expiration of refresh token
+                  refresh_token:
+                    type: string
+                    description: refresh token
+                  token_type:
+                    type: string
+                    description: token type
+                  not-before-policy:
+                    type: integer
+                    description: HZ
+                  session_state:
+                    type: string
+                    description: session state
+                  scope:
+                    type: string
+                    description: scope
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI3cmFncld0MlJuVjZaeFdZa2JLZDktOGZYV202UlRCU3Q0WE1IYWdpZFQwIn0.eyJqdGkiOiIyM2VjNzg3Ny0yMzBjLTRkODktYmYyNy0zMWFmZWQ5MDMyYjciLCJleHAiOjE1NzU0ODEwMTMsIm5iZiI6MCwiaWF0IjoxNTc1NDc3NDEzLCJpc3MiOiJodHRwOi8vdGVzdGluZy5rZXkuY2FyZ2dvLmludC9hdXRoL3JlYWxtcy9DYXJnZ29TZWN1cml0eVJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjhhYzNjYjljLTA1MGQtNDUzZS1hNGRhLTEzOGE5MmZlZmExNCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImNhcmdnby1tZG0tYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiN2Q4YmFhMTAtNWQwNy00ZTZmLWE3OTctOTAzMzZjOGY4MWRiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJUcGxNYW5hZ2VyIiwib2ZmbGluZV9hY2Nlc3MiLCJTaGlwcGVyTWFuYWdlciIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiIiLCJwcmltYXJ5Um9sZSI6IlRwbE1hbmFnZXIiLCJjb21wYW55SWQiOiIxNWNlM2Q3Yi1kYjA3LTRkOTgtYmE3Zi1hNGYxYWNmMWY3ODIiLCJjaGlsZHJlbkNvbXBhbmllcyI6WyI3NDYyOGNkZS1jMzc0LTRmOTctYThiYS1lZDFjMGIzOTdhYzQiLCI2M2Y1MWM3ZC0yYjg1LTQwMWEtYWYwMS02NTQ3YzY3ZTlkOWIiLCI3YWY0MzRmZS00Mzg5LTQ5ZDQtYTM1Ni02NjlkZGNiMDIwMDgiXSwidXNlcklkIjoiZDMzMWVhZTEtMjU4Ni00YmFlLTgxODMtN2QyZmY5ZTJmYzQ2In0.ngQ15qlArqFyQ-fRJZcHGBFZQBWsG2oXgJqsOpY8ECpQN5-VgX2zlWPATZ469qXEmFEdwGfsadk62T6fu7Qxf1elTFSw5OqXHAWKPs1myB3E-wxDe9zRZdnFm72G5uoVHyLhPwbInWTTZNzCrISQVUQq1UbcQ5K0OZxQSThTgh232qPNjl6J1KekjvAkottMTCugv0Rl1MxvCnLyyYPyKl2EACCJShJ0-xjLaU1sH68Jnt7kPC8HCfqvZUj2c9YtBKwBTkOhriPQWHEQLC8g0GMSV3Q19_fCuAkqo9qd2spLyi7K9hNI1PNSESOSPBVNPqVmip712YdtlEUE8OQ0wQ
+                expires_in: 3600
+                refresh_expires_in: 7776000
+                refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmM2NmZjRjMC0yOTJiLTQxODctOTExYi02OWU2YzRiNTZjMDcifQ.eyJqdGkiOiI3MmU0NmZkMC1hODMyLTQwM2EtYjRjYS1mNzRkZWFlMDFkNDAiLCJleHAiOjE1ODMyNTM0MTMsIm5iZiI6MCwiaWF0IjoxNTc1NDc3NDEzLCJpc3MiOiJodHRwOi8vdGVzdGluZy5rZXkuY2FyZ2dvLmludC9hdXRoL3JlYWxtcy9DYXJnZ29TZWN1cml0eVJlYWxtIiwiYXVkIjoiaHR0cDovL3Rlc3Rpbmcua2V5LmNhcmdnby5pbnQvYXV0aC9yZWFsbXMvQ2FyZ2dvU2VjdXJpdHlSZWFsbSIsInN1YiI6IjhhYzNjYjljLTA1MGQtNDUzZS1hNGRhLTEzOGE5MmZlZmExNCIsInR5cCI6IlJlZnJlc2giLCJhenAiOiJjYXJnZ28tbWRtLWFwcCIsImF1dGhfdGltZSI6MCwic2Vzc2lvbl9zdGF0ZSI6IjdkOGJhYTEwLTVkMDctNGU2Zi1hNzk3LTkwMzM2YzhmODFkYiIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJUcGxNYW5hZ2VyIiwib2ZmbGluZV9hY2Nlc3MiLCJTaGlwcGVyTWFuYWdlciIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiIifQ.pZennjVD9J7hzRA32ENTkDgwzX71FkWYa-zX8fMaE8A
+                token_type: "bearer"
+                not-before-policy: 0
+                session_state: 7d8baa10-5d07-4e6f-a797-90336c8f81db
+                scope:
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                error400Example:
+                  $ref: '#/components/examples/error400Example'
+        '401':
+          description: Authorization information is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                error401Example:
+                  $ref: '#/components/examples/error401Example'
+        # Definition of all error statuses
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /booking/contract-ftl-loads:
+    post:
+      tags:
+        - booking
+      summary: Book FTL contract load
+      description: >
+        Some description
+        multiline description example
+        supports [Markdown](http://a.com) (CommonMark) for rich text representation.
+      operationId: bookFtlLoad
+      requestBody:
+        description: >
+          Contact FTL request
+          multiline description example.
+          Use markdown for rich text representation,
+          such as **bold**, *italic*, and [links](https://swagger.io).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractFtlRequest'
+        required: true
+      responses:
+        '200':
+          description: Return LoadId object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadIdObject'
+        '400':
+          description: Bad request or invalid parameters
+          content: {}
+        '500':
+          description: Unhandled server error
+          content: {}
+        # Definition of all error statuses
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      externalDocs:
+        description: Learn more about Book FTL contract load provided by this API.
+        url: https://connect.carggo.com/api/booking/contract-ftl-loads/
+      x-codegen-request-body-name: body
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    ContractFtlRequest:
+      type: object
+      properties:
+        loadId:
+          $ref: '#/components/schemas/LoadIdObject'
+        contractId:
+          type: number #integer? double or string?
+          description: Contract Id description
+        rate:
+          $ref: '#/components/schemas/RateObject'
+        stops:
+          $ref: '#/components/schemas/StopContractCollection'
+        loadDetails:
+          $ref: '#/components/schemas/LoadDetailsObject'
+        respondByDateTime:
+          type: string
+          format: date-time # the date-time notation as defined by RFC 3339, section 5.6, for example, 2017-07-21T17:32:28Z
+          description: respondByDateTime description
+      required:
+        - loadId:
+        - contractId:
+        - rate:
+        - stops:
+        - details:
+        - respondByDateTime:
+
+    RateObject:
+      type: object
+      properties:
+        transportMode:
+          type: string
+          description: transport mode description
+        transportType:
+          type: string
+          description: transport type description
+        miles:
+          type: number
+          format: float #???
+          description: miles description
+      required:
+        - transportMode:
+        - transportType:
+        - miles:
+
+    StopContractCollection:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/StopContractObject'
+
+    StopContractObject:
+      type: object
+      properties:
+        type:
+          type: string
+          description: stop type
+        order:
+          type: integer
+          description: order description
+        location:
+          type: string # this is object, describe later
+          description: location description
+        weight:
+          type: nunber
+          description: description
+        volume:
+          type: number
+          description: description
+        quantity:
+          type: integer
+          description: description
+        # todo more fields
+
+    LoadDetailsObject:
+      type: object
+      properties:
+        commodity:
+          type: string
+        quantity:
+          type: integer
+        volume:
+          type: number
+        refNumbers:
+          type: string # describe object later
+        carrier:
+          type: string # describe object later
+        status:
+          type: string # or enum?
+      # todo more fields
+    
+    LoadIdObject:
+      type: object
+      properties:
+        carggoProNumber:
+          type: string
+          description: description
+        shipperRefNumber:
+          type: string
+          description: description
+        shipperId:
+          type: string
+          description: description
+        shipperIdType:
+          type: string
+          description: description
+        partnerRefNumber:
+          type: string
+          description: description
+        partnerId:
+          type: string
+          description: description
+        partnerIdType:
+          type: string
+          description: description
+      example:
+        carggoProNumber: 0001
+        shipperRefNumber: aar-123
+        shipperId: 029345
+        shipperIdType: type
+        partnerRefNumber: qwerty
+        partnerId: partner-09
+        partnerIdType: Sheep
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+      example:
+        code: invalid_request
+        message: Your ClientId is invalid
+
+  examples:
+    commonErrorExample:
+      value:
+        code: error_code_machine_readable
+        message: Error message (human-readable)
+    error400Example:
+      value:
+        code: missing_required_parameter
+        message: Your request was missing a {par_name} parameter
+    error401Example:
+      value:
+        code: invalid_request
+        message: Your ClientId is invalid
